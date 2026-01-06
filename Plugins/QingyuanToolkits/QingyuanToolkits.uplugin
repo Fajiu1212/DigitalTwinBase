@@ -1,0 +1,53 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "QingyuanToolkits",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "Qingyuan",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "QingyuanToolkits",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ExtendSlate",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"Dependencies": [
+				"ExtendEditorStyle"
+			]
+		},
+		{
+			"Name": "ExtendEditorStyle",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ExtendEditorCommand",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "WebWidget",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "WebUI",
+			"Enabled": true
+		}
+	]
+}

@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Runtime Image & GIF Loader",
+	"Description": "Load high-resolution images and GIFs at runtime without hitches",
+	"Category": "Code Plugins",
+	"CreatedBy": "Petr Leontev",
+	"CreatedByURL": "https://unrealsolutions.com/",
+	"DocsURL": "",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/e8d4771b882343199acaf995c32a5fea",
+	"SupportURL": "business@unrealsolutions.com",
+	"EngineVersion": "5.5.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "RuntimeImageLoader",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64",
+				"Mac",
+				"Linux",
+				"Android"
+			]
+		}
+	]
+}
