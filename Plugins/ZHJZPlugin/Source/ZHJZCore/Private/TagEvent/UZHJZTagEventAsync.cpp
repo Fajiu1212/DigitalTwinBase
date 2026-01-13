@@ -32,7 +32,6 @@ bool UZHJZTagEventAsync::PassFilter(const FGameplayTag& EventTag) const
 {
 	if (!FilterTagOrPrefix.IsValid())
 	{
-		// 约定：过滤Tag为空 => 不通过（也可以改成“不过滤全收”）
 		return false;
 	}
 
@@ -61,10 +60,8 @@ void UZHJZTagEventAsync::Activate()
 		return;
 	}
 
-	// 关键：把 Async 节点注册到 GI，避免该对象被 GC
 	RegisterWithGameInstance(GI);
 
-	// 之后再取 Subsystem / Listener 并绑定
 	if (UZHJZTagEventBusSubsystem* Bus = GI->GetSubsystem<UZHJZTagEventBusSubsystem>())
 	{
 		Listener = Bus->GetGlobalListener();
@@ -74,7 +71,6 @@ void UZHJZTagEventAsync::Activate()
 			return;
 		}
 
-		// 绑定到全局 Listener（AddUnique 防止重复绑定）
 		Listener->OnEvent.AddUniqueDynamic(this, &UZHJZTagEventAsync::HandleListenerEvent);
 	}
 	else

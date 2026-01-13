@@ -2,26 +2,42 @@ using UnrealBuildTool;
 
 public class ZHJZCore : ModuleRules
 {
-    public ZHJZCore(ReadOnlyTargetRules Target) : base(Target)
-    {
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+	public ZHJZCore(ReadOnlyTargetRules Target) : base(Target)
+	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "Core",
-            }
-        );
+		PublicIncludePaths.AddRange(
+			new string[]
+			{
+				ModuleDirectory + "/Public"
+			}
+		);
 
-        PrivateDependencyModuleNames.AddRange(
-            new string[]
-            {
-                "CoreUObject",
-                "Engine",
-                "Slate",
-                "SlateCore",
-                "GameplayTags"
-            }
-        );
-    }
+
+		PrivateIncludePaths.AddRange(
+			new string[]
+			{
+				ModuleDirectory + "/Private"
+			}
+		);
+
+		PublicDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"Core"
+			}
+		);
+
+		PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"CoreUObject",
+				"Engine",
+				"Slate",
+				"SlateCore",
+				"GameplayTags",
+				"UMG",
+			}
+		);
+	}
 }

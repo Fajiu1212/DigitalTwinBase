@@ -28,7 +28,12 @@ public class ZHJZCoreEditor : ModuleRules
 				"ApplicationCore",
 				"LevelEditor", 
 				"EditorSubsystem",
-				"EditorScriptingUtilities"
+				"EditorScriptingUtilities",
+				"UMGEditor",
+				"PropertyEditor",
+				"ContentBrowser",
+				"AssetRegistry",
+				"ZHJZCore"
 			}
 		);
 	}

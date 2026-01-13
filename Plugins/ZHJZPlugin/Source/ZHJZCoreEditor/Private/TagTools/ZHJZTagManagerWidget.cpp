@@ -3,11 +3,23 @@
 #include "TagTools/ZHJZGameplayTagsIniUtils.h"
 
 #include "Framework/Notifications/NotificationManager.h"
+#include "Styling/AppStyle.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Widgets/Text/STextBlock.h"
+
+// DataAsset editor
+#include "MainUI/TopBarConfigAsset.h"
+#include "EditorAssetLibrary.h"
+#include "IContentBrowserSingleton.h"
+#include "PropertyEditorModule.h"
+#include "IDetailsView.h"
+
+#include "PropertyCustomizationHelpers.h"
+#include "Widgets/Layout/SSeparator.h"
 
 static void Notify(const FString& Msg, SNotificationItem::ECompletionState State)
 {
@@ -18,7 +30,33 @@ static void Notify(const FString& Msg, SNotificationItem::ECompletionState State
 
 void SZHJZTagManagerWidget::Construct(const FArguments& InArgs)
 {
-	ReloadFromIni();
+	ReloadFromDatatable();
+
+	// Create DetailsView
+	{
+		FPropertyEditorModule& PropModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+		FDetailsViewArgs DetailsArgs;
+		DetailsArgs.bHideSelectionTip = true;
+		DetailsArgs.bLockable = false;
+		DetailsArgs.bUpdatesFromSelection = false;
+		DetailsArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+
+		BarDetailsView = PropModule.CreateDetailView(DetailsArgs);
+		BarDetailsView->SetObject(nullptr);
+	}
+
+	// Create AssetPicker
+	FAssetPickerConfig Picker;
+	Picker.SelectionMode = ESelectionMode::Single;
+	Picker.bAllowNullSelection = true;
+	Picker.InitialAssetViewType = EAssetViewType::List;
+	Picker.Filter.ClassPaths.Add(UBarConfigAssetBase::StaticClass()->GetClassPathName());
+	Picker.OnAssetSelected = FOnAssetSelected::CreateLambda([this](const FAssetData& AssetData)
+	{
+		UBarConfigAssetBase* Asset = Cast<UBarConfigAssetBase>(AssetData.GetAsset());
+		SetEditingBarAsset(Asset);
+	});
 
 	ChildSlot
 	[
@@ -30,10 +68,10 @@ void SZHJZTagManagerWidget::Construct(const FArguments& InArgs)
 			// Toolbar row
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-			.Padding(0,0,0,8)
+			.Padding(0, 0, 0, 8)
 			[
 				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)
+				+ SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
 				[
 					SNew(SButton)
 					.Text(FText::FromString(TEXT("Reload")))
@@ -50,15 +88,15 @@ void SZHJZTagManagerWidget::Construct(const FArguments& InArgs)
 			// Add row
 			+ SVerticalBox::Slot()
 			.AutoHeight()
-			.Padding(0,0,0,8)
+			.Padding(0, 0, 0, 8)
 			[
 				SNew(SHorizontalBox)
-				+ SHorizontalBox::Slot().FillWidth(0.45f).Padding(0,0,8,0)
+				+ SHorizontalBox::Slot().FillWidth(0.45f).Padding(0, 0, 8, 0)
 				[
 					SAssignNew(NewTagTextBox, SEditableTextBox)
-					.HintText(FText::FromString(TEXT("New Tag (e.g. ZHJZ.Event.Menu.Open)")))
+					.HintText(FText::FromString(TEXT("New Tag (e.g. EventTag.TopOptions.Init)")))
 				]
-				+ SHorizontalBox::Slot().FillWidth(0.45f).Padding(0,0,8,0)
+				+ SHorizontalBox::Slot().FillWidth(0.45f).Padding(0, 0, 8, 0)
 				[
 					SAssignNew(NewCommentTextBox, SEditableTextBox)
 					.HintText(FText::FromString(TEXT("DevComment (optional)")))
@@ -69,7 +107,7 @@ void SZHJZTagManagerWidget::Construct(const FArguments& InArgs)
 					.Text(FText::FromString(TEXT("Add")))
 					.OnClicked(this, &SZHJZTagManagerWidget::OnAdd)
 				]
-				+ SHorizontalBox::Slot().AutoWidth().Padding(8,0,0,0)
+				+ SHorizontalBox::Slot().AutoWidth().Padding(8, 0, 0, 0)
 				[
 					SNew(SButton)
 					.Text(FText::FromString(TEXT("Remove Selected")))
@@ -77,20 +115,93 @@ void SZHJZTagManagerWidget::Construct(const FArguments& InArgs)
 				]
 			]
 
-			// List
+			// List (top part)
 			+ SVerticalBox::Slot()
-			.FillHeight(1.0f)
+			.FillHeight(0.45f)
+			.Padding(0, 0, 0, 8)
 			[
 				SAssignNew(ListView, SListView<FItem>)
 				.ListItemsSource(&Items)
 				.OnGenerateRow(this, &SZHJZTagManagerWidget::OnGenerateRow)
 				.SelectionMode(ESelectionMode::Single)
 			]
+
+			// DataAsset editor (bottom part)
+			+ SVerticalBox::Slot()
+			.FillHeight(0.55f)
+			[
+				SNew(SBorder)
+				.Padding(8)
+				.BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+				[
+					SNew(SVerticalBox)
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(0, 0, 0, 6)
+					[
+						SNew(SHorizontalBox)
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.VAlign(VAlign_Center)
+						.Padding(0, 0, 8, 0)
+						[
+							SNew(STextBlock)
+							.Text(FText::FromString(TEXT("Bar Config Asset")))
+						]
+
+						+ SHorizontalBox::Slot()
+						.FillWidth(1.0f)
+						.VAlign(VAlign_Center)
+						[
+							SNew(SObjectPropertyEntryBox)
+							                             .AllowedClass(UBarConfigAssetBase::StaticClass())
+							                             .ObjectPath_Lambda([this]()
+							                             {
+								                             const UObject* Obj = EditingBarAsset.Get();
+								                             return Obj ? Obj->GetPathName() : FString();
+							                             })
+							                             .OnObjectChanged_Lambda([this](const FAssetData& AssetData)
+							                             {
+								                             UBarConfigAssetBase* Asset = Cast<UBarConfigAssetBase>(
+									                             AssetData.GetAsset());
+								                             SetEditingBarAsset(Asset);
+							                             })
+							                             .AllowClear(true)
+						]
+
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						.Padding(8, 0, 0, 0)
+						[
+							SNew(SButton)
+							.Text(FText::FromString(TEXT("Save")))
+							.OnClicked(this, &SZHJZTagManagerWidget::OnSaveBarAsset)
+						]
+					]
+
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(0, 0, 0, 6)
+					[
+						SNew(SSeparator)
+					]
+
+					+ SVerticalBox::Slot()
+					.FillHeight(1.0f)
+					[
+						BarDetailsView.IsValid()
+							? BarDetailsView.ToSharedRef()
+							: SNullWidget::NullWidget
+					]
+				]
+			]
 		]
 	];
 }
 
-void SZHJZTagManagerWidget::ReloadFromIni()
+void SZHJZTagManagerWidget::ReloadFromDatatable()
 {
 	TArray<FEventGameplayTagListItem> Loaded;
 	FString Error;
@@ -115,7 +226,7 @@ void SZHJZTagManagerWidget::ReloadFromIni()
 
 FReply SZHJZTagManagerWidget::OnReload()
 {
-	ReloadFromIni();
+	ReloadFromDatatable();
 	Notify(TEXT("Reloaded."), SNotificationItem::CS_Success);
 	return FReply::Handled();
 }
@@ -130,6 +241,45 @@ SZHJZTagManagerWidget::FItem SZHJZTagManagerWidget::GetSelectedItem() const
 	return Selected.Num() > 0 ? Selected[0] : nullptr;
 }
 
+void SZHJZTagManagerWidget::SetEditingBarAsset(UBarConfigAssetBase* NewAsset)
+{
+	EditingBarAsset = NewAsset;
+
+	if (BarDetailsView.IsValid())
+	{
+		BarDetailsView->SetObject(NewAsset);
+	}
+
+	if (NewAsset)
+	{
+		Notify(FString::Printf(TEXT("Editing: %s"), *NewAsset->GetPathName()), SNotificationItem::CS_None);
+	}
+}
+
+FReply SZHJZTagManagerWidget::OnSaveBarAsset()
+{
+	UBarConfigAssetBase* Asset = EditingBarAsset.Get();
+	if (!Asset)
+	{
+		Notify(TEXT("No BarConfigAsset selected."), SNotificationItem::CS_Fail);
+		return FReply::Handled();
+	}
+
+	Asset->MarkPackageDirty();
+
+	if (UEditorAssetLibrary::SaveLoadedAsset(Asset, true))
+	{
+		Notify(TEXT("BarConfigAsset saved."), SNotificationItem::CS_Success);
+		//UTopBarWidgetBase::RefreshAllByConfig(Asset);
+	}
+	else
+	{
+		Notify(TEXT("Failed to save BarConfigAsset."), SNotificationItem::CS_Fail);
+	}
+
+	return FReply::Handled();
+}
+
 FReply SZHJZTagManagerWidget::OnAdd()
 {
 	const FString NewTagStr = NewTagTextBox ? NewTagTextBox->GetText().ToString().TrimStartAndEnd() : TEXT("");
@@ -142,7 +292,7 @@ FReply SZHJZTagManagerWidget::OnAdd()
 	}
 	if (!FZHJZGameplayTagsIniUtils::IsEventTag(NewTagStr))
 	{
-		Notify(TEXT("Tag must be under ZHJZ.Event."), SNotificationItem::CS_Fail);
+		Notify(TEXT("Tag must be under EventTag."), SNotificationItem::CS_Fail);
 		return FReply::Handled();
 	}
 
@@ -160,7 +310,7 @@ FReply SZHJZTagManagerWidget::OnAdd()
 	NewItem->DevComment = CommentStr;
 
 	Items.Add(NewItem);
-	Items.Sort([](const FItem& A, const FItem& B){ return A->Tag < B->Tag; });
+	Items.Sort([](const FItem& A, const FItem& B) { return A->Tag < B->Tag; });
 
 	if (ListView)
 	{
@@ -168,8 +318,14 @@ FReply SZHJZTagManagerWidget::OnAdd()
 		ListView->SetSelection(NewItem);
 	}
 
-	if (NewTagTextBox) NewTagTextBox->SetText(FText::GetEmpty());
-	if (NewCommentTextBox) NewCommentTextBox->SetText(FText::GetEmpty());
+	if (NewTagTextBox)
+	{
+		NewTagTextBox->SetText(FText::GetEmpty());
+	}
+	if (NewCommentTextBox)
+	{
+		NewCommentTextBox->SetText(FText::GetEmpty());
+	}
 
 	return FReply::Handled();
 }
@@ -199,7 +355,10 @@ FReply SZHJZTagManagerWidget::OnApply()
 
 	for (const FItem& It : Items)
 	{
-		if (!It) continue;
+		if (!It)
+		{
+			continue;
+		}
 		Out.Add(*It);
 	}
 
@@ -211,7 +370,7 @@ FReply SZHJZTagManagerWidget::OnApply()
 	}
 
 	FZHJZGameplayTagsIniUtils::RefreshGameplayTagTreeInEditor();
-	Notify(TEXT("Applied to plugin DefaultGameplayTags.ini and refreshed tag tree."), SNotificationItem::CS_Success);
+	Notify(TEXT("Applied and refreshed tag tree."), SNotificationItem::CS_Success);
 
 	return FReply::Handled();
 }
@@ -219,29 +378,29 @@ FReply SZHJZTagManagerWidget::OnApply()
 TSharedRef<ITableRow> SZHJZTagManagerWidget::OnGenerateRow(FItem Item, const TSharedRef<STableViewBase>& OwnerTable)
 {
 	return SNew(STableRow<FItem>, OwnerTable)
-	[
-		SNew(SHorizontalBox)
-
-		+ SHorizontalBox::Slot()
-		.FillWidth(0.5f)
-		.Padding(4,2)
 		[
-			SNew(STextBlock)
-			.Text_Lambda([Item]()
-			{
-				return FText::FromString(Item.IsValid() ? Item->Tag : TEXT(""));
-			})
-		]
+			SNew(SHorizontalBox)
 
-		+ SHorizontalBox::Slot()
-		.FillWidth(0.5f)
-		.Padding(4,2)
-		[
-			SNew(STextBlock)
-			.Text_Lambda([Item]()
-			{
-				return FText::FromString(Item.IsValid() ? Item->DevComment : TEXT(""));
-			})
-		]
-	];
+			+ SHorizontalBox::Slot()
+			.FillWidth(0.5f)
+			.Padding(4, 2)
+			[
+				SNew(STextBlock)
+				.Text_Lambda([Item]()
+				{
+					return FText::FromString(Item.IsValid() ? Item->Tag : TEXT(""));
+				})
+			]
+
+			+ SHorizontalBox::Slot()
+			.FillWidth(0.5f)
+			.Padding(4, 2)
+			[
+				SNew(STextBlock)
+				.Text_Lambda([Item]()
+				{
+					return FText::FromString(Item.IsValid() ? Item->DevComment : TEXT(""));
+				})
+			]
+		];
 }
