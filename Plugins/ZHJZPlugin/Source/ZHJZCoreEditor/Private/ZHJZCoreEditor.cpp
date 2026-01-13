@@ -6,31 +6,36 @@
 #include "Framework/Docking/TabManager.h"
 #include "Styling/AppStyle.h"
 #include "ToolMenus.h"
+#include "Interfaces/IPluginManager.h"
+#include "Styling/SlateStyleRegistry.h"
 #include "Widgets/Docking/SDockTab.h"
 
-static const FName ZHJZTagManagerTabName(TEXT("ZHJZTagManager"));
+static const FName EventTagManager(TEXT("EventTagManager"));
 
 #define LOCTEXT_NAMESPACE "FZHJZCoreEditorModule"
 
 void FZHJZCoreEditorModule::StartupModule()
 {
+	InitializeStyle();
 	RegisterZHJZEventTagsTable();
-	
-	// 1) 注册可打开的 Nomad Tab
-	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
-		ZHJZTagManagerTabName,
-		FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&)
-		{
-			return SNew(SDockTab)
-				.TabRole(ETabRole::NomadTab)
-				[
-					SNew(SZHJZTagManagerWidget)
-				];
-		}))
-		.SetDisplayName(LOCTEXT("ZHJZTagManagerTabTitle", "ZHJZ Tag Manager"))
-		.SetMenuType(ETabSpawnerMenuType::Hidden);
 
-	// 2) ToolMenus：在 menus 可用后注册工具栏按钮
+	// 注册 Nomad Tab
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+		                        EventTagManager,
+		                        FOnSpawnTab::CreateLambda([](const FSpawnTabArgs&)
+		                        {
+		                        	TSharedRef<SDockTab> Tab = SNew(SDockTab)
+				                        .TabRole(ETabRole::NomadTab)
+				                        [
+					                        SNew(SZHJZTagManagerWidget)
+				                        ];
+		                        	Tab->SetTabIcon(FSlateIcon(GetStyleSetName(), "Fajiu.Slate").GetIcon());
+		                        	return Tab;
+		                        }))
+	                        .SetDisplayName(LOCTEXT("AWSATagManagerTabTitle", "AWSA Tag Manager"))
+	                        .SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	// 注册 toolmenu button
 	UToolMenus::RegisterStartupCallback(
 		FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FZHJZCoreEditorModule::RegisterToolBarMenu)
 	);
@@ -38,10 +43,44 @@ void FZHJZCoreEditorModule::StartupModule()
 
 void FZHJZCoreEditorModule::ShutdownModule()
 {
+	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
+	StyleSet.Reset();
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
 
-	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ZHJZTagManagerTabName);
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(EventTagManager);
+}
+
+FName FZHJZCoreEditorModule::GetStyleSetName()
+{
+	return StyleSetName;
+}
+
+void FZHJZCoreEditorModule::InitializeStyle()
+{
+	if (!StyleSet.IsValid())
+	{
+		StyleSet = CreateSlateStyleSet();
+		FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
+	}
+}
+
+TSharedRef<FSlateStyleSet> FZHJZCoreEditorModule::CreateSlateStyleSet()
+{
+	TSharedRef<FSlateStyleSet> SlateStyleSet = MakeShareable(new FSlateStyleSet(StyleSetName));
+
+	FString PluginDir = IPluginManager::Get().FindPlugin(TEXT("ZHJZPlugin"))->GetBaseDir();
+	const FString ResourcePath = FPaths::Combine(PluginDir,TEXT("Resources/"));
+
+	SlateStyleSet->SetContentRoot(ResourcePath);
+
+	{
+		const FVector2D IconSize(16.f, 16.f);
+		FSlateImageBrush* SlateImageBrush =
+			new FSlateImageBrush(ResourcePath + TEXT("Fajiu.png"), IconSize);
+		SlateStyleSet->Set("Fajiu.Slate", SlateImageBrush);
+	}
+	return SlateStyleSet;
 }
 
 void FZHJZCoreEditorModule::RegisterToolBarMenu()
@@ -49,25 +88,19 @@ void FZHJZCoreEditorModule::RegisterToolBarMenu()
 	UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu(TEXT("LevelEditor.LevelEditorToolBar.User"));
 	FToolMenuSection& Section = ToolbarMenu->FindOrAddSection(TEXT("TagTools"));
 
-	const FUIAction Action(FExecuteAction::CreateLambda([]()
-	{
-		FGlobalTabmanager::Get()->TryInvokeTab(ZHJZTagManagerTabName);
-	}));
-
-	FToolMenuEntry Entry = FToolMenuEntry::InitToolBarButton(
-		TEXT("ZHJZ.OpenTagManager"),
-		Action,
-		LOCTEXT("ZHJZOpenTagManager_Label", "ZHJZ Tags"),
-		LOCTEXT("ZHJZOpenTagManager_Tooltip", "Open ZHJZ Tag Manager"),
-		FSlateIcon(FAppStyle::GetAppStyleSetName(), "Icons.Tool")
+	Section.AddEntry(FToolMenuEntry::InitComboButton("AWSA Editor Toolkit", FToolUIAction(),
+	                                                 FNewToolMenuDelegate::CreateRaw(
+		                                                 this, &FZHJZCoreEditorModule::FillToolBarMenu),
+	                                                 LOCTEXT("AWSA Editor Toolkit", "AWSA Editor Toolkit"),
+	                                                 LOCTEXT("AWSA Editor Toolkit", "Toolkit menu"),
+	                                                 FSlateIcon(GetStyleSetName(),
+	                                                            "Fajiu.Slate"))
 	);
-
-	Section.AddEntry(Entry);
 }
 
 void FZHJZCoreEditorModule::RegisterZHJZEventTagsTable()
 {
-	// 你的 DataTable 软引用
+	// tag DT soft ref.
 	const FSoftObjectPath TablePath(TEXT("/ZHJZPlugin/DataTable/DT_ZHJZEventTags.DT_ZHJZEventTags"));
 
 	UGameplayTagsSettings* Settings = GetMutableDefault<UGameplayTagsSettings>();
@@ -76,8 +109,6 @@ void FZHJZCoreEditorModule::RegisterZHJZEventTagsTable()
 		return;
 	}
 
-	// GameplayTagTableList 类型是 TArray<FSoftObjectPath>（或 TArray<TSoftObjectPtr<UDataTable>>，不同版本略有差异）
-	// 这里用最兼容的方式：把 SoftObjectPath 加进去
 	bool bAlreadyAdded = false;
 	for (const FSoftObjectPath& Existing : Settings->GameplayTagTableList)
 	{
@@ -96,6 +127,40 @@ void FZHJZCoreEditorModule::RegisterZHJZEventTagsTable()
 
 	// 刷新 tag tree
 	UGameplayTagsManager::Get().EditorRefreshGameplayTagTree();
+}
+
+void FZHJZCoreEditorModule::FillToolBarMenu(UToolMenu* Menu)
+{
+	FToolMenuSection& SubSection = Menu->AddSection("MainSection");
+
+	const FUIAction Action(FExecuteAction::CreateLambda([]()
+	{
+		FGlobalTabmanager::Get()->TryInvokeTab(EventTagManager);
+	}));
+
+	SubSection.AddEntry(
+		FToolMenuEntry::InitMenuEntry(
+			"Event Tag Manager",
+			LOCTEXT("Event Tag Manager Label", "Event Tag Manager"),
+			LOCTEXT("Event Tag Manager Tooltip", "Open event tag manager"),
+			FSlateIcon(),
+			Action
+		)
+	);
+	SubSection.AddEntry(
+		FToolMenuEntry::InitMenuEntry(
+			"SubButton2",
+			LOCTEXT("SubButton2Label", "Special Action"),
+			LOCTEXT("SubButton2Tooltip", "Custom Functionality"),
+			FSlateIcon(),
+			FUIAction(
+				FExecuteAction::CreateLambda([]()
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Custom Action Triggered!"));
+				})
+			)
+		)
+	);
 }
 
 #undef LOCTEXT_NAMESPACE

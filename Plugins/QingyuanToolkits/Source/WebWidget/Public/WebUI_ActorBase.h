@@ -21,7 +21,7 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;
-
+ 
 	//Gameplay tag
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "WebUI|GameplayTag")
 	FGameplayTagContainer WebTagContainer;

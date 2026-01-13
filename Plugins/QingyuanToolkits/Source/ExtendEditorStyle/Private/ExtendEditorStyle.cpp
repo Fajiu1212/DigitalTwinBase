@@ -11,13 +11,13 @@
 
 void FExtendEditorStyleModule::StartupModule()
 {
-	InitializeStyle();
+	//InitializeStyle();
 }
 
 void FExtendEditorStyleModule::ShutdownModule()
 {
-	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
-	StyleSet.Reset();
+	//FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
+	//StyleSet.Reset();
 }
 
 FName FExtendEditorStyleModule::GetStyleSetName()

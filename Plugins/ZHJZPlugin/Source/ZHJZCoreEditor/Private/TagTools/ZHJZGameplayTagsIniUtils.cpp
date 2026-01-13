@@ -11,7 +11,7 @@ static const TCHAR* ZHJZEventRootPrefix = TEXT("EventTag");
 static UDataTable* GetZHJZEventTagsTable(FString* OutError)
 {
 	const TSoftObjectPtr<UDataTable> TableRef(
-		FSoftObjectPath(TEXT("/ZHJZPlugin/DataTable/DT_ZHJZEventTags.DT_ZHJZEventTags"))
+		FSoftObjectPath(TEXT("/ZHJZPlugin/Data/DT_ZHJZEventTags.DT_ZHJZEventTags"))
 	);
 
 	UDataTable* Table = TableRef.LoadSynchronous();
@@ -19,7 +19,7 @@ static UDataTable* GetZHJZEventTagsTable(FString* OutError)
 	{
 		if (OutError)
 		{
-			*OutError = TEXT("Failed to load DT_ZHJZEventTags from /ZHJZPlugin/DataTable.");
+			*OutError = TEXT("Failed to load DT_ZHJZEventTags from /ZHJZPlugin/Data.");
 		}
 		return nullptr;
 	}

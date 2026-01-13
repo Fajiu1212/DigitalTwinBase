@@ -9,7 +9,7 @@
 void FExtendSlateModule::StartupModule()
 {
 	IModuleInterface::StartupModule();
-	CreateToolBarMenu();
+	//CreateToolBarMenu();
 }
 
 void FExtendSlateModule::ShutdownModule()

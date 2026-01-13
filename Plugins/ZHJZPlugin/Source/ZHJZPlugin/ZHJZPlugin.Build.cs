@@ -10,7 +10,7 @@ public class ZHJZPlugin : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				ModuleDirectory + "/Private"
+				ModuleDirectory + "/Public"
 			}
 			);
 				

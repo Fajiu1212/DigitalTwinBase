@@ -9,7 +9,7 @@ public class ZHJZMenu : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core"
             }
         );
 

@@ -9,7 +9,10 @@ struct FEventGameplayTagListItem;
 class SZHJZTagManagerWidget : public SCompoundWidget
 {
 public:
-	SLATE_BEGIN_ARGS(SZHJZTagManagerWidget) {}
+	SLATE_BEGIN_ARGS(SZHJZTagManagerWidget)
+		{
+		}
+
 	SLATE_END_ARGS();
 
 	void Construct(const FArguments& InArgs);
@@ -28,8 +31,15 @@ private:
 	FReply OnRemoveSelected();
 	FReply OnApply();
 
-	void ReloadFromIni();
+	void ReloadFromDatatable();
 	TSharedRef<class ITableRow> OnGenerateRow(FItem Item, const TSharedRef<class STableViewBase>& OwnerTable);
 
 	FItem GetSelectedItem() const;
+	
+	// DataAssets part
+	TWeakObjectPtr<class UBarConfigAssetBase> EditingBarAsset;
+	TSharedPtr<class IDetailsView> BarDetailsView;
+
+	void SetEditingBarAsset(class UBarConfigAssetBase* NewAsset);
+	FReply OnSaveBarAsset();
 };
