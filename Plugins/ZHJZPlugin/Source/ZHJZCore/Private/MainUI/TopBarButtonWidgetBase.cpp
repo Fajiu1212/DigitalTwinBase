@@ -14,6 +14,7 @@ void UTopBarButtonWidgetBase::HandleClicked()
 	if (UZHJZTagEventBusSubsystem* Bus = GetGameInstance()->GetSubsystem<UZHJZTagEventBusSubsystem>())
 	{
 		Bus->BroadcastTagEvent(RowData.ButtonTag, RowData.JsonRaw);
+		Bus->RebuildBottomBarStyle.Execute(RowData.BottomBarStyle);
 	}
 }
 

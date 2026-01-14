@@ -75,6 +75,6 @@ class ZHJZCORE_API UBottomBarConfigAsset : public UBarConfigAssetBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="TopBar")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BottomBar")
 	TMap<FGameplayTag, FBottomBarConfigStruct> BottomBarConfig;
 };

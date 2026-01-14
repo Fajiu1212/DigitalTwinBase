@@ -5,6 +5,9 @@
 #include "Widgets/Views/SListView.h"
 
 struct FEventGameplayTagListItem;
+class IDetailsView;
+class SEditableTextBox;
+class UBarConfigAssetBase;
 
 class SZHJZTagManagerWidget : public SCompoundWidget
 {
@@ -13,33 +16,40 @@ public:
 		{
 		}
 
-	SLATE_END_ARGS();
+	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
-
-private:
 	using FItem = TSharedPtr<FEventGameplayTagListItem>;
 
+private:
+	// List
 	TArray<FItem> Items;
 	TSharedPtr<SListView<FItem>> ListView;
 
-	TSharedPtr<class SEditableTextBox> NewTagTextBox;
-	TSharedPtr<class SEditableTextBox> NewCommentTextBox;
+	TSharedPtr<SEditableTextBox> NewTagTextBox;
+	TSharedPtr<SEditableTextBox> NewCommentTextBox;
 
+	// Actions
 	FReply OnReload();
 	FReply OnAdd();
 	FReply OnRemoveSelected();
 	FReply OnApply();
 
 	void ReloadFromDatatable();
-	TSharedRef<class ITableRow> OnGenerateRow(FItem Item, const TSharedRef<class STableViewBase>& OwnerTable);
+
+	TSharedRef<ITableRow> OnGenerateRow(FItem Item, const TSharedRef<STableViewBase>& OwnerTable);
 
 	FItem GetSelectedItem() const;
-	
-	// DataAssets part
-	TWeakObjectPtr<class UBarConfigAssetBase> EditingBarAsset;
-	TSharedPtr<class IDetailsView> BarDetailsView;
 
-	void SetEditingBarAsset(class UBarConfigAssetBase* NewAsset);
+	// DataAssets part
+	TWeakObjectPtr<UBarConfigAssetBase> EditingBarAsset;
+	TSharedPtr<IDetailsView> BarDetailsView;
+
+	void SetEditingBarAsset(UBarConfigAssetBase* NewAsset);
 	FReply OnSaveBarAsset();
+
+public:
+	bool TryRenameItemTag(const FItem& Item, const FString& NewTagStr, FString& OutError);
+
+	void NotifyUser(const FString& Msg, bool bSuccess) const;
 };

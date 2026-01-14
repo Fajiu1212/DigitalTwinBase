@@ -15,10 +15,10 @@ class ZHJZCORE_API UBottomBarWidgetBase : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="TopBar")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="BottomBar")
 	TObjectPtr<UBottomBarConfigAsset> Config;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TopBar")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="BottomBar")
 	FGameplayTag DefaultBottomBarStyle;
 	
 protected:
@@ -32,7 +32,8 @@ protected:
 
 	
 private:
-	void RebuildFromConfig(bool bIsDesignTime, FGameplayTag TargetStyle);
+	UFUNCTION()
+	void RebuildFromConfig(FGameplayTag TargetStyle);
 	void ClearBoxes();
 
 	void AddButtonToBox(

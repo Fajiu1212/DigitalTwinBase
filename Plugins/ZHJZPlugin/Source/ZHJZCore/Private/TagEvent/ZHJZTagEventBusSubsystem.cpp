@@ -116,3 +116,11 @@ void UZHJZTagEventBusSubsystem::BroadcastTagEvent(FGameplayTag EventTag, const F
 		}
 	}
 }
+
+void UZHJZTagEventBusSubsystem::ChangeBottomBarStyle(FGameplayTag NewStyle)
+{
+	if (RebuildBottomBarStyle.IsBound())
+	{
+		RebuildBottomBarStyle.Execute(NewStyle);
+	}
+}

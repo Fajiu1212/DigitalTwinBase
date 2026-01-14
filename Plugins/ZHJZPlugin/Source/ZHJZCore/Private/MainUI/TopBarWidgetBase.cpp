@@ -1,5 +1,6 @@
 #include "MainUI/TopBarWidgetBase.h"
 
+#include "ZHJZWidgetWorldUtils.h"
 #include "Blueprint/WidgetTree.h"
 #include "MainUI/TopBarButtonWidgetBase.h"
 #include "MainUI/TopBarConfigAsset.h"
@@ -91,31 +92,6 @@ void UTopBarWidgetBase::AddButtonToBox(
 	MySlot->SetPadding(Pad);
 }
 
-static UWorld* ResolveWorldForWidget(UUserWidget* Widget, bool bIsDesignTime)
-{
-	if (!Widget)
-	{
-		return nullptr;
-	}
-
-	if (UWorld* World = Widget->GetWorld())
-	{
-		return World;
-	}
-
-	if (UWorld* OuterWorld = Widget->GetTypedOuter<UWorld>())
-	{
-		return OuterWorld;
-	}
-
-	if (UObject* Outer = Widget->GetOuter())
-	{
-		return Outer->GetWorld();
-	}
-
-	return nullptr;
-}
-
 void UTopBarWidgetBase::RebuildFromConfig(bool bIsDesignTime)
 {
 	ClearBoxes();
@@ -141,7 +117,7 @@ void UTopBarWidgetBase::RebuildFromConfig(bool bIsDesignTime)
 	SortGroup(Left);
 	SortGroup(Right);
 
-	UWorld* World = ResolveWorldForWidget(this, bIsDesignTime);
+	UWorld* World = ZHJZWidgetWorldUtils::ResolveWorld(this);
 	if (!World)
 	{
 		return;

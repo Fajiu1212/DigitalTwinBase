@@ -43,7 +43,7 @@ struct FTopBarButtonConfig
 	FString JsonRaw;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TopBar")
-	FGameplayTag BottonBarStyle;
+	FGameplayTag BottomBarStyle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TopBar")
 	FGuid Id = FGuid::NewGuid();
