@@ -37,6 +37,6 @@ class ZHJZCORE_API UMenuEntryConfigAsset : public UBarConfigAssetBase
 	GENERATED_BODY()
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="MenuEntryMenuEntry")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="MenuEntry")
 	TArray<FMenuEntryConfig> FMenuEntryWidgets;
 };

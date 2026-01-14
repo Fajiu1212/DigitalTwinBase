@@ -1,53 +1,35 @@
 #include "MainUI/BottomBarWidgetBase.h"
 
+#include "ZHJZWidgetWorldUtils.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "MainUI/BottomBarButtonWidgetBase.h"
-
-static UWorld* ResolveWorldForWidget(UUserWidget* Widget, bool bIsDesignTime)
-{
-	if (!Widget)
-	{
-		return nullptr;
-	}
-
-	if (UWorld* World = Widget->GetWorld())
-	{
-		return World;
-	}
-
-	if (UWorld* OuterWorld = Widget->GetTypedOuter<UWorld>())
-	{
-		return OuterWorld;
-	}
-
-	if (UObject* Outer = Widget->GetOuter())
-	{
-		return Outer->GetWorld();
-	}
-
-	return nullptr;
-}
+#include "TagEvent/ZHJZTagEventBusSubsystem.h"
 
 void UBottomBarWidgetBase::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	RebuildFromConfig(IsDesignTime(), DefaultBottomBarStyle);
+	RebuildFromConfig(DefaultBottomBarStyle);
 }
 
 void UBottomBarWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
-	RebuildFromConfig(IsDesignTime(), DefaultBottomBarStyle);
+	RebuildFromConfig(DefaultBottomBarStyle);
+	if (UZHJZTagEventBusSubsystem* Bus = GetGameInstance()->GetSubsystem<UZHJZTagEventBusSubsystem>())
+	{
+		Bus->RebuildBottomBarStyle.Clear();
+		Bus->RebuildBottomBarStyle.BindDynamic(this, &UBottomBarWidgetBase::RebuildFromConfig);
+	}
 }
 
 void UBottomBarWidgetBase::SynchronizeProperties()
 {
 	Super::SynchronizeProperties();
-	RebuildFromConfig(IsDesignTime(), DefaultBottomBarStyle);
+	RebuildFromConfig(DefaultBottomBarStyle);
 }
 
-void UBottomBarWidgetBase::RebuildFromConfig(bool bIsDesignTime, FGameplayTag TargetStyle)
+void UBottomBarWidgetBase::RebuildFromConfig(FGameplayTag TargetStyle)
 {
 	ClearBoxes();
 
@@ -83,7 +65,7 @@ void UBottomBarWidgetBase::RebuildFromConfig(bool bIsDesignTime, FGameplayTag Ta
 	}
 	
 	
-	UWorld* World = ResolveWorldForWidget(this, bIsDesignTime);
+	UWorld* World = ZHJZWidgetWorldUtils::ResolveWorld(this);
 	if (!World)
 	{
 		return;

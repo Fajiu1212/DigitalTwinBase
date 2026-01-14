@@ -9,6 +9,8 @@
 
 #include "ZHJZTagEventBusSubsystem.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE_OneParam(FRebuildBottomBarStyle, FGameplayTag,NewStyle);
+
 UCLASS()
 class ZHJZCORE_API UZHJZTagEventBusSubsystem : public UGameInstanceSubsystem
 {
@@ -32,6 +34,9 @@ public:
 	// void Unsubscribe(FZHJZTagEventSubscriptionHandle Handle);
 	// void UnsubscribeAllForOwner(UObject* Owner);
 
+	FRebuildBottomBarStyle RebuildBottomBarStyle;
+	UFUNCTION(BlueprintCallable, Category="ZHJZ|TagEvent")
+	void ChangeBottomBarStyle(FGameplayTag NewStyle);
 private:
 	struct FRecord
 	{

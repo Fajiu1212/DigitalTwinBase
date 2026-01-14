@@ -1,32 +1,8 @@
 #include "MainUI/BottomBarButtonWidgetBase.h"
 
+#include "ZHJZWidgetWorldUtils.h"
 #include "Components/VerticalBoxSlot.h"
 #include "TagEvent/ZHJZTagEventBusSubsystem.h"
-
-static UWorld* ResolveWorldForWidget(UUserWidget* Widget, bool bIsDesignTime)
-{
-	if (!Widget)
-	{
-		return nullptr;
-	}
-
-	if (UWorld* World = Widget->GetWorld())
-	{
-		return World;
-	}
-
-	if (UWorld* OuterWorld = Widget->GetTypedOuter<UWorld>())
-	{
-		return OuterWorld;
-	}
-
-	if (UObject* Outer = Widget->GetOuter())
-	{
-		return Outer->GetWorld();
-	}
-
-	return nullptr;
-}
 
 void UBottomBarButtonWidgetBase::ApplyRowData(const FBottomBarButtonConfig& InRow)
 {
@@ -56,6 +32,11 @@ void UBottomBarButtonWidgetBase::AddButtonToBox_Implementation(UMenuEntryWidgetB
 		return;
 	}
 	
+	if (!VerticalBox_MenuEntryBox.Get())
+	{
+		return;
+	}
+	
 	UVerticalBoxSlot* MySlot = VerticalBox_MenuEntryBox.Get()->AddChildToVerticalBox(ButtonWidget);
 	
 	if (!MySlot) return;
@@ -66,7 +47,7 @@ void UBottomBarButtonWidgetBase::AddButtonToBox_Implementation(UMenuEntryWidgetB
 
 void UBottomBarButtonWidgetBase::AddMenuEntry_Implementation()
 {
-	UWorld* World = ResolveWorldForWidget(this, IsDesignTime());
+	UWorld* World = ZHJZWidgetWorldUtils::ResolveWorld(this);
 	
 	// Create && Add
 	auto CreateAndAdd = [&](FMenuEntryConfig Cfg)

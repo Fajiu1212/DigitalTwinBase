@@ -80,6 +80,8 @@ TSharedRef<FSlateStyleSet> FZHJZCoreEditorModule::CreateSlateStyleSet()
 			new FSlateImageBrush(ResourcePath + TEXT("Fajiu.png"), IconSize);
 		SlateStyleSet->Set("Fajiu.Slate", SlateImageBrush);
 	}
+	
+	
 	return SlateStyleSet;
 }
 
@@ -101,7 +103,7 @@ void FZHJZCoreEditorModule::RegisterToolBarMenu()
 void FZHJZCoreEditorModule::RegisterZHJZEventTagsTable()
 {
 	// tag DT soft ref.
-	const FSoftObjectPath TablePath(TEXT("/ZHJZPlugin/DataTable/DT_ZHJZEventTags.DT_ZHJZEventTags"));
+	const FSoftObjectPath TablePath(TEXT("/ZHJZPlugin/Data/DT_ZHJZEventTags.DT_ZHJZEventTags"));
 
 	UGameplayTagsSettings* Settings = GetMutableDefault<UGameplayTagsSettings>();
 	if (!Settings)
